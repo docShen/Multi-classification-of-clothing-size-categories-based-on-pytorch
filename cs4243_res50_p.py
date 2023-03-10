@@ -167,12 +167,12 @@ class CS4243_dataset(Dataset):
     def __len__(self):
         return len(self.img_index_list)
 
-my_lr= 5e-4
-batch_size = 64
+my_lr= 1e-4
+batch_size = 32
 epochs = 150
 
 train_dataset = CS4243_dataset(root_path,mode = 'train', transform = transformations)
-train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, num_workers=8, shuffle = True, pin_memory=True)
+train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, num_workers=0, shuffle = True, pin_memory=True)
 
 val_dataset = CS4243_dataset(root_path,mode = 'val', transform = transformations_val)
 val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size,num_workers=0, shuffle = False, pin_memory=True)
@@ -192,13 +192,17 @@ def train(model, train_loader, optimizer, criterion):
         # forward pass
         outputs = model(X_train)
         # calculate the loss
-        cur_loss = torch.tensor(0.0).to(device)
+        loss0 = criterion(outputs[0], y_train[:,0])
+        loss1 = criterion(outputs[1], y_train[:,1])
+        loss2 = criterion(outputs[2], y_train[:,2])
+        loss3 = criterion(outputs[3], y_train[:,3])
+        loss4 = criterion(outputs[4], y_train[:,4])
+        loss5 = criterion(outputs[5], y_train[:,5])
+        cur_loss = loss0 + loss1 + loss2 + loss3 + loss4 + loss5
+        # acc
         cur_acc = 0
         for c in range(6):
-            loss = criterion(outputs[c], y_train[:,c])
-            # acc
             cur_acc += (outputs[c].argmax(1) == y_train[:,c]).sum().item()
-            cur_loss += loss
         running_correct += cur_acc
         cur_loss.backward()
         optimizer.step()
@@ -231,10 +235,14 @@ def validate(model, test_loader, criterion):
             # forward pass
             outputs = model(X_train)
             # calculate the loss
-            cur_loss = torch.tensor(0.0).to(device)
+            loss0 = criterion(outputs[0], y_train[:, 0])
+            loss1 = criterion(outputs[1], y_train[:, 1])
+            loss2 = criterion(outputs[2], y_train[:, 2])
+            loss3 = criterion(outputs[3], y_train[:, 3])
+            loss4 = criterion(outputs[4], y_train[:, 4])
+            loss5 = criterion(outputs[5], y_train[:, 5])
+            cur_loss = loss0 + loss1 + loss2 + loss3 + loss4 + loss5
             for c in range(6):
-                loss = criterion(outputs[c], y_train[:, c])
-                cur_loss += loss
                 cur_acc += (outputs[c].argmax(1) == y_train[:,c]).sum().item()
             running_correct += cur_acc
 
